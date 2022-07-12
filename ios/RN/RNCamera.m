@@ -2262,7 +2262,9 @@ BOOL _sessionInterrupted = NO;
             _finishedReadingText = false;
             self.startText = [NSDate date];
             [self.textDetector findTextBlocksInFrame:image scaleX:scaleX scaleY:scaleY completed:^(NSArray * textBlocks) {
-                NSDictionary *eventText = @{@"type" : @"TextBlock", @"textBlocks" : textBlocks};
+                NSData *imageData = UIImageJPEGRepresentation(image, 1.0);
+                NSData *base64ImageData = [[NSData alloc] initWithBase64EncodedString:imageData options:0];
+                NSDictionary *eventText = @{@"type" : @"TextBlock", @"textBlocks" : textBlocks, @"imageData" : base64ImageData};
                 [self onText:eventText];
                 self.finishedReadingText = true;
             }];

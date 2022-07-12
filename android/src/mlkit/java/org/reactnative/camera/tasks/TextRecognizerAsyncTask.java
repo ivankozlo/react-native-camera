@@ -1,7 +1,13 @@
 package org.reactnative.camera.tasks;
 
+import android.graphics.Bitmap;
+import android.graphics.ImageFormat;
 import android.graphics.Rect;
+import android.graphics.YuvImage;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableArray;
@@ -11,6 +17,7 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.ThemedReactContext;
 
 import com.google.android.cameraview.CameraView;
+import com.google.android.gms.common.util.Base64Utils;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.mlkit.vision.common.InputImage;
@@ -20,7 +27,10 @@ import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizerOptions;
 
 import org.reactnative.camera.utils.ImageDimensions;
+import android.graphics.BitmapFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.util.Base64;
 import java.util.List;
 
 
@@ -40,18 +50,18 @@ public class TextRecognizerAsyncTask extends android.os.AsyncTask<Void, Void, Vo
   private String TAG = "RNCamera";
 
   public TextRecognizerAsyncTask(
-      TextRecognizerAsyncTaskDelegate delegate,
-      ThemedReactContext themedReactContext,
-      byte[] imageData,
-      int width,
-      int height,
-      int rotation,
-      float density,
-      int facing,
-      int viewWidth,
-      int viewHeight,
-      int viewPaddingLeft,
-      int viewPaddingTop
+          TextRecognizerAsyncTaskDelegate delegate,
+          ThemedReactContext themedReactContext,
+          byte[] imageData,
+          int width,
+          int height,
+          int rotation,
+          float density,
+          int facing,
+          int viewWidth,
+          int viewHeight,
+          int viewPaddingLeft,
+          int viewPaddingTop
   ) {
     mDelegate = delegate;
     mImageData = imageData;
@@ -76,13 +86,35 @@ public class TextRecognizerAsyncTask extends android.os.AsyncTask<Void, Void, Vo
     InputImage image = InputImage.fromByteArray(mImageData, mWidth, mHeight, getFirebaseRotation(), InputImage.IMAGE_FORMAT_YV12);
     detector.process(image)
             .addOnSuccessListener(new OnSuccessListener<Text>() {
+              @RequiresApi(api = Build.VERSION_CODES.O)
               @Override
               public void onSuccess(Text firebaseVisionText) {
                 List<Text.TextBlock> textBlocks = firebaseVisionText.getTextBlocks();
                 WritableArray serializedData = serializeEventData(textBlocks);
+                WritableMap imageData = Arguments.createMap();
+
+                byte[] nv21Image = YV12toNV21(mImageData, new byte[mImageData.length], mWidth, mHeight);
+                YuvImage yv = new YuvImage(nv21Image, ImageFormat.NV21, mWidth, mHeight, null);
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+                yv.compressToJpeg(new Rect(0, 0, mWidth, mHeight), 100, out);
+                byte[] bytes = out.toByteArray();
+
+
+
+                // Bitmap bitmap = BitmapFactory.decodeByteArray(mImageData , 0, mImageData.length);
+                // ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                // bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+                // byte[] byteArray = byteArrayOutputStream .toByteArray();
+
+                imageData.putString("imageData", java.util.Base64.getEncoder().encodeToString(bytes));
+
+
+                serializedData.pushMap(imageData);
+
                 mDelegate.onTextRecognized(serializedData);
                 mDelegate.onTextRecognizerTaskCompleted();
-                }
+              }
             })
             .addOnFailureListener(
                     new OnFailureListener() {
@@ -90,10 +122,27 @@ public class TextRecognizerAsyncTask extends android.os.AsyncTask<Void, Void, Vo
                       public void onFailure(Exception e) {
                         Log.e(TAG, "Text recognition task failed" + e);
                         mDelegate.onTextRecognizerTaskCompleted();
-                        }
+                      }
                     });
 
     return null;
+  }
+
+  public static byte[] YV12toNV21(final byte[] input,
+                                  final byte[] output, final int width, final int height) {
+
+    final int size = width * height;
+    final int quarter = size / 4;
+    final int vPosition = size; // This is where V starts
+    final int uPosition = size + quarter; // This is where U starts
+
+    System.arraycopy(input, 0, output, 0, size); // Y is same
+
+    for (int i = 0; i < quarter; i++) {
+      output[size + i*2 ] = input[vPosition + i]; // For NV21, V first
+      output[size + i*2 + 1] = input[uPosition + i]; // For Nv21, U second
+    }
+    return output;
   }
 
   private int getFirebaseRotation(){
@@ -119,6 +168,7 @@ public class TextRecognizerAsyncTask extends android.os.AsyncTask<Void, Void, Vo
     return result;
   }
 
+  @RequiresApi(api = Build.VERSION_CODES.O)
   private WritableArray serializeEventData(List<Text.TextBlock> textBlocks) {
     WritableArray textBlocksList = Arguments.createArray();
     for (Text.TextBlock block: textBlocks) {
@@ -128,6 +178,8 @@ public class TextRecognizerAsyncTask extends android.os.AsyncTask<Void, Void, Vo
       }
       textBlocksList.pushMap(serializedTextBlock);
     }
+    //String s = Base64.getEncoder().encodeToString(imageData);
+    //textBlocksList.pushString("image", java.util.Base64.getEncoder().encodeToString(imageData));
 
     return textBlocksList;
   }
