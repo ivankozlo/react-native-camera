@@ -2262,8 +2262,9 @@ BOOL _sessionInterrupted = NO;
             _finishedReadingText = false;
             self.startText = [NSDate date];
             [self.textDetector findTextBlocksInFrame:image scaleX:scaleX scaleY:scaleY completed:^(NSArray * textBlocks) {
-                NSData *imageDataJPG = UIImageJPEGRepresentation(image, 1.0);
-                NSDictionary *eventText = @{@"type" : @"TextBlock", @"textBlocks" : textBlocks, @"imageData": [imageDataJPG base64EncodedStringWithOptions:0]};
+                // NSData *imageDataJPG = UIImageJPEGRepresentation(image, 1.0);
+                // NSDictionary *eventText = @{@"type" : @"TextBlock", @"textBlocks" : textBlocks, @"imageData": [imageDataJPG base64EncodedStringWithOptions:0]};
+                NSDictionary *eventText = @{@"type" : @"TextBlock", @"textBlocks" : textBlocks};
                 [self onText:eventText];
                 self.finishedReadingText = true;
             }];
