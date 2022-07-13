@@ -36,12 +36,12 @@
                            if (error != nil || result == nil) {
                                completed(textBlocks);
                            } else {
-                               completed([self processBlocks:result.blocks imageDataJPG]);
+                               completed([self processBlocks:result.blocks :imageDataJPG]);
                            }
                        }];
 }
 
-- (NSArray *)processBlocks:(NSArray *)features (NSData *)imageDataJPG
+- (NSArray *)processBlocks:(NSArray *)features :(NSData *)imageDataJPG
 {
   NSMutableArray *textBlocks = [[NSMutableArray alloc] init];
   for (MLKTextBlock *textBlock in features) {
@@ -49,7 +49,7 @@
       @{@"type": @"block", @"value" : textBlock.text, @"bounds" : [self processBounds:textBlock.frame], @"components" : [self processLine:textBlock.lines]};
       [textBlocks addObject:textBlockDict];
   }
-  [textBlock addObject:@{@"imageData":[imageDataJPG base64EncodedStringWithOptions:0]}]
+    [textBlocks addObject:@{@"imageData":[imageDataJPG base64EncodedStringWithOptions:0]}];
   return textBlocks;
 }
 
