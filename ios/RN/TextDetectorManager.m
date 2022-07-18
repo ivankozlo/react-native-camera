@@ -77,10 +77,10 @@
 
 - (NSDictionary *)processBounds:(CGRect)bounds
 {
-  float width = bounds.size.width;
-  float height = bounds.size.height;
-  float originX = bounds.origin.x;
-  float originY = bounds.origin.y;
+  float width = bounds.size.width * _scaleX;
+  float height = bounds.size.height * _scaleY;
+  float originX = bounds.origin.x * _scaleX;
+  float originY = bounds.origin.y * _scaleY;
   NSDictionary *boundsDict =
   @{
     @"size" : 
