@@ -130,7 +130,7 @@
     // if (position == 1) {
     //     scale = bufferHeight>bufferWidth ? 720 / bufferWidth : 720 / bufferHeight;
     // }
-    float scale = 1
+    float scale = 1;
     CIFilter* scaleFilter = [CIFilter filterWithName:@"CILanczosScaleTransform"];
     [scaleFilter setValue:ciImage forKey:kCIInputImageKey];
     [scaleFilter setValue:@(scale) forKey:kCIInputScaleKey];
