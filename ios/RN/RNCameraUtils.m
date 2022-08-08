@@ -153,9 +153,9 @@
     
     float imageWidth    = image.size.width;
     float imageHeight   = image.size.height;
-    float scaleToWidth  = previewSize.width;
-    float scaleToHeight = previewSize.height;
-    CGRect cropRect       = CGRectMake((imageWidth/2 - scaleToWidth/2), (imageHeight/2 - scaleToHeight/2), scaleToWidth, scaleToHeight);
+    float scaleToWidth  = 560;
+    float scaleToHeight = 800;
+    CGRect cropRect       = CGRectMake((imageWidth/2 - scaleToWidth/2), (imageHeight/2 - scaleToHeight/2 - 50), scaleToWidth, scaleToHeight);
     CGImageRef imageRef   = CGImageCreateWithImageInRect([image CGImage], cropRect);
     UIImage *croppedImage = [UIImage imageWithCGImage:imageRef];
     CGImageRelease(imageRef);
