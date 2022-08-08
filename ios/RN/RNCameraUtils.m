@@ -126,11 +126,10 @@
     // scale down CIImage
     float bufferWidth = CVPixelBufferGetWidth(imageBuffer);
     float bufferHeight = CVPixelBufferGetHeight(imageBuffer);
-    // float scale = bufferHeight>bufferWidth ? 1280 / bufferWidth : 1280 / bufferHeight;
-    // if (position == 1) {
-    //     scale = bufferHeight>bufferWidth ? 720 / bufferWidth : 720 / bufferHeight;
-    // }
     float scale = 1;
+    if (position == 1) {
+        scale = 1;
+    }
     CIFilter* scaleFilter = [CIFilter filterWithName:@"CILanczosScaleTransform"];
     [scaleFilter setValue:ciImage forKey:kCIInputImageKey];
     [scaleFilter setValue:@(scale) forKey:kCIInputScaleKey];
@@ -148,12 +147,21 @@
         boundingRect = CGRectMake(0, 0, bufferHeight*scale, bufferWidth*scale);
     }
     videoImage = [temporaryContext createCGImage:ciImage fromRect:boundingRect];
-    CGRect croppedSize = AVMakeRectWithAspectRatioInsideRect(previewSize, boundingRect);
-    CGImageRef croppedCGImage = CGImageCreateWithImageInRect(videoImage, croppedSize);
+//    CGRect croppedSize = AVMakeRectWithAspectRatioInsideRect(previewSize, boundingRect);
+//    CGImageRef croppedCGImage = CGImageCreateWithImageInRect(videoImage, croppedSize);
     UIImage *image = [[UIImage alloc] initWithCGImage:videoImage];
+    
+    float imageWidth    = image.size.width;
+    float imageHeight   = image.size.height;
+    float scaleToWidth  = previewSize.width;
+    float scaleToHeight = previewSize.height;
+    CGRect cropRect       = CGRectMake((imageWidth/2 - scaleToWidth/2), (imageHeight/2 - scaleToHeight/2), scaleToWidth, scaleToHeight);
+    CGImageRef imageRef   = CGImageCreateWithImageInRect([image CGImage], cropRect);
+    UIImage *croppedImage = [UIImage imageWithCGImage:imageRef];
+    CGImageRelease(imageRef);
     CGImageRelease(videoImage);
-    CGImageRelease(croppedCGImage);
-    return image;
+    
+    return croppedImage;
 }
 
 @end
